@@ -8,7 +8,7 @@ using namespace std;
 //When the program launches we have 0 memory allocated
 void* base = nullptr; //When we want to search our heap, we will start from here
 
-//First-Fit Search Algorithm
+//Fist-Fit Search Algorithm
 /*To find our desired block, we have to make sure that 
  1) its free
  2) it has sufficient size
@@ -39,7 +39,7 @@ struct meta* free_block(struct meta** ptr, size_t size){
  We will use the sbrk() system call (belongs to the POSIX standard) for this purpose.
 This function is used to move the program break(ie the boundary of the heap) upwards, thus providing us with new encompassed space */
 
-struct meta* spacerequest(struct meta* ptr, size_t size){
+struct meta* space_request(struct meta* ptr, size_t size){
 
     /*The OS doesn't care about our metadata, 
     thus we'll need to calculate the total memory with regards to 
@@ -74,9 +74,34 @@ struct meta* spacerequest(struct meta* ptr, size_t size){
 
 }
 
+/* Suppose if a user had previously allocated a massive block of memory and then freed it. Later on they want to use a block of memory that is smaller than the one they freed.
+Our First-Fit search algorithm will hand over the previous block without checking the size of the new block requested by the user, leading to a wastage of heap space. 
+This phenomenon is referred to as Internal Fragmentation.
+So we'll make a function that will split this block to the size requested by the user and the remainder of the space in our free list for future use*/
+
+void block_split(struct meta* block, size_t size){
+
+
+    char* base = (char*)block; //We''l use char pointer arithmetic to step byte-by-byte
+    struct meta* new_b = (struct meta*)(base + SIZEOFMETA + size);
+    //                            Start + Size of metadata + Payload Size
+
+    //Initialize the remainder space as a new block in our free list
+    new_b->size = block->size - size - SIZEOFMETA; 
+    new_b->free = 1; // The remainder block is free
+    new_b->magic = MAGIC; 
+    new_b->next = block->next; //The new block will point to the block pointed by the previous one
+
+    //Adjusting the original block to fit the block size requested by the user
+    block->size = size;
+    block->next = new_b; //Point to our new block
+
+}
+
 
 
 
 int main(){
 
+    
 }
