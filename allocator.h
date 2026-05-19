@@ -23,7 +23,7 @@ eg: ALIGN([1,16]) = 16, ALIGN([17,32]) = 32 ..ALIGN([241,256]) = 256 and so on*/
 
 #define SIZEOFMETA sizeof(struct meta) //used to manage the metadata of each block
 #define MAGIC 0xDEADBEEF 
-/*if a user accidentally writes past their allocated memory(leading to an overflow), this field will be overridden first, 
+/*if a user accidentally writes past their allocated memory(leading to a n overflow), this field will be overridden first, 
 providing us with a heap corruption alert,thereby enabling us to handle the error which would have otherwise gone unnoticed, 
 leading to a crash in the program*/
 
@@ -31,7 +31,7 @@ leading to a crash in the program*/
 
 /*
 As the OS will proivde us with a large chunk of raw memory, we need to manage it in a way that will allow us to allocate and free memory efficiently
-We need to use precise pointer arithemetic that will enable us to find whre the tracking info and the user data
+We need to use precise pointer arithemetic that will enable us to find the tracking info and the user data
 
 This is how our block of memory will look like, 
  Block = [Metadata|Payload]
@@ -55,7 +55,7 @@ User asks memory -> One Block gets carved. User frees the memory -> Block gets f
 /* Pointer Scaling => if we have a metadata pointer, doing pointer+1 jumps completely past this structure to the next structure of block meta type.
 
 As we have defined the size of our structure with regards to the alignment padding(ie. 32, 48, 64 ...), we can break pointer scaling by casting our pointer to a char pointer as is exactly 1 byte,
-therefore when we do (char*)ptr + META_SIZE, we can. move the pointer by exaclty META_SIZE number of bytes*/
+therefore when we do (char*)ptr + META_SIZE, we can move the pointer by exaclty META_SIZE number of bytes*/
 
 
 #define PAYLOAD(block) ((void*)((char*)(block) + SIZEOFMETA))
