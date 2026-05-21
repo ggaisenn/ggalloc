@@ -237,7 +237,30 @@ void sweep_phase(){
 }
 
 
+//We'll also make a free function to allow the user to manually release memory when they are done with it. 
+// Step backward -> locate the hidden header -> mark the block as free
 
+void ggfree(void* ptr){
+
+    //if user passes a null pointer, the standard behaviour is to safely do nothing
+    if(!ptr) return;
+
+    //Use macro to step backwards in memory and locate the hidden header
+    struct meta* blk = META(ptr);
+
+    /*If the magic number is missing, it means that the user is trying 
+    1)to free a block that was already freed or 
+    2) a block that was never allocated*/
+    if(blk->magic != MAGIC){
+        //So we'll safely ignore this user request
+        return;
+    }
+
+    //Mark the block as free and not reachable so that it can be reclaimed in the next GC cycle
+    blk->free = 1;
+    blk->is_reachable = 0;
+
+}
 
 
 
