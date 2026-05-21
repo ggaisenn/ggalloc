@@ -6,7 +6,7 @@ using namespace std;
 
 //The absolute start of our heap
 //When the program launches we have 0 memory allocated
-void* base = nullptr; //When we want to search our heap, we will start from here
+void* global = nullptr; //When we want to search our heap, we will start from here
 
 //Fist-Fit Search Algorithm
 /*To find our desired block, we have to make sure that 
@@ -16,7 +16,7 @@ void* base = nullptr; //When we want to search our heap, we will start from here
 struct meta* free_block(struct meta** ptr, size_t size){
 
     //Start traversing from the beginning of the heap
-    struct meta* curr = (struct meta*)base;
+    struct meta* curr = (struct meta*)global;
 
     while(curr && !(curr->free && curr->size >= size)){
         //Moving to the next block, whilst keeping track of the previous block
@@ -82,8 +82,8 @@ So we'll make a function that will split this block to the size requested by the
 void block_split(struct meta* block, size_t size){
 
 
-    char* base = (char*)block; //We''l use char pointer arithmetic to step byte-by-byte
-    struct meta* new_b = (struct meta*)(base + SIZEOFMETA + size);
+    char* byte = (char*)block; //We''l use char pointer arithmetic to step byte-by-byte
+    struct meta* new_b = (struct meta*)(byte + SIZEOFMETA + size);
     //                            Start + Size of metadata + Payload Size
 
     //Initialize the remainder space as a new block in our free list
@@ -97,6 +97,146 @@ void block_split(struct meta* block, size_t size){
     block->next = new_b; //Point to our new block
 
 }
+
+//The Core Allocator
+void* ggalloc(size_t size){
+
+    //If user reuqests for 0 bytes, we will return null
+    if(size <=0){
+        return nullptr;
+    }
+
+    //Variable used to obtain refined alignment
+    size_t size_aligned = ALIGN(size);
+
+    struct meta* blk = nullptr;
+
+    /*if our global is null, we'll skip searching and request space to get our initial chunk of RAM 
+    if we already have a heap, we'll find a free block*/
+
+    if(global==nullptr){
+        blk = space_request(nullptr, size_aligned);
+        if(!blk) return nullptr; //Our request for memory denied by the OS
+        global = blk;
+    }else{
+        //We'll search the heap, to find a free block
+        struct meta* ptr = (struct meta*)global; //We'll keep track of the previous block in our search to attach new blocks if needed                 
+        blk = free_block(&ptr, size_aligned);
+        if(blk){
+
+            //Check if we can split the block to save space
+            if((blk->size - size_aligned)>=(SIZEOFMETA + ALIGNMENT)){
+                block_split(blk, size_aligned);
+
+            }else{
+                /* We don't need to split the block, 
+                We'll give the whole block */
+                blk->free=0;
+                blk->magic = MAGIC;
+            }
+
+        }else{
+            /*If our search still turns up empty, 
+            we'll pass the block to request space 
+            so that we can attach a new chunk of memory to the end of our list*/
+            blk = space_request(ptr, size_aligned);
+            if(!blk) return nullptr;
+        }
+    }
+
+    //Return the payload address to the user
+    return PAYLOAD(blk);
+
+}
+
+//To verify if a random memory is inside our heap
+bool valid_heap(void* ptr){
+
+    if(!global || !ptr) return false;
+
+    //sbrk(0) gives the highest address of our current heap
+    void* heap_top = sbrk(0);
+
+    //The pointer must fall between the heap start and the end of the heap
+    return (ptr>=global && ptr < heap_top);
+}
+
+/*-----------------GARBAGE-COLLECTOR-----------------
+1)MARK PHASE
+2)SWEEP PHASE
+To prevent memory leaks, dangling pointers, and other issues related 
+to manual memory management, we can implement a simple mark-and-sweep GC
+*/
+
+/*
+1)MARK PHASE => Scans the Program "Root Set"(includes local and static/global varaiables) to identify all memory blocks that are reachable by the user
+If the block is reachable, we'll mark it as safe
+If the block is not reachable, we'll consider it as garbage
+*/
+
+void mark_phase(void** stack_b, void** stack_t){
+    void** start = stack_b;
+    void** end = stack_t;
+
+    /*The stack goes downwards, 
+    so we swap them to iterate safely from lowest to highest address.*/
+    if (start>end){
+        start= stack_t;
+        end = stack_b;
+    }
+
+    
+    //We'll scan through the stack
+    for(void** p = start; p<end; p++){
+        void* potential = *p; //To get the potential address
+
+        if(valid_heap(potential)){
+
+            //Step backwards to find the metadata
+            struct meta* block = META(potential);
+
+            //If the block is valid and used, we'll mark it as reachable
+            if(block->magic == MAGIC && block->free==0){
+                block->is_reachable = 1; //The block survives garbage collection
+            }
+
+        }
+
+    }
+    
+}
+
+
+/*2)SWEEP PHASE => Iterates through the heap to reclaim any blocks that are not marked as reachable and return them to the free list
+Any memory the user lost track of is recycled automatically to prevent any leaks*/
+
+void sweep_phase(){
+
+
+    struct meta* curr = (struct meta*)global;
+
+    //We'll check through every single block we've allocated
+    while(curr!=nullptr){
+
+        //We only care about the blocks that are currently in use
+        if(curr->free==0){
+            //If the block is not reachable, the user lost track of it, so we reclaim the block by marking it as free
+            if(curr->is_reachable==0){
+                curr->free = 1;
+
+            }else{
+                //The block is reachable, but we need to reset the mark so that it can be evaluated for the next GC Cycle
+                curr->is_reachable = 0;
+            }
+
+        }
+
+        //Move to the next block in our linked list
+        curr = curr->next;
+    }
+}
+
+
 
 
 
