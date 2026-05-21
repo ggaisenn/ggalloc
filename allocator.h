@@ -3,10 +3,10 @@
 
 //Defining the structure of our metadata 
 struct meta{
-
     size_t size; //to check size of memory block requested by the user, and to handle it among various OS versions(ie. bits)
     int free;  //1=free, 0=used
     int magic; //to check corruption/Integrity of block
+    int is_reachable; // 1=Reachable, 0=Garbage
     struct meta* next; //next block
 };
 
