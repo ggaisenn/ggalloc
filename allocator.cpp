@@ -161,6 +161,49 @@ bool valid_heap(void* ptr){
     return (ptr>=global && ptr < heap_top);
 }
 
+/*Eg: If a user allocates three 32-byte blocks of memory and then frees all three, 
+we technically would have had 96 bytes of free memory (plus header space). 
+However, they are tracked as three distinct blocks, a future request for a 64 byte block would fail our First-Fit search algorithm.
+To fix this external fragmentation, we can implement a function that would coalesce all adjacent blocks into a single larger block*/
+
+void coalesce(){
+
+    if(!global) return; //If we haven't allocated any memory, there's nothing to be coalesced
+
+    struct meta* curr = (struct meta*)global;
+
+    //Traversing the entire heap
+    while(curr!=nullptr && curr->next!=nullptr){
+
+        //If the current block and the adjacent block are free
+        if(curr->free==1 && curr->next->free==1){
+            //Calculate where the current block physically ends in memory, this verifies physical adjacency between curr and curr->next
+            char* curr_end = (char*)curr + SIZEOFMETA + curr->size;
+
+            //Calculate where the next block physically starts in memory
+            char* next_start = (char*)curr->next;
+
+            if(curr_end == next_start){
+
+                //The new block will abosrobs the next block's payload size and metadata header
+                curr->size = SIZEOFMETA + curr->next->size;
+
+                //Update the linked list to the next of the absorbed block
+                curr->next = curr->next->next;
+
+                /*We need to loop again as our new larger block 
+                will be able to merge with another free one*/
+
+                continue;
+            }
+        }
+    }
+
+    //If no merge happened, move to the next block
+    curr = curr->next;
+
+}
+
 /*-----------------GARBAGE-COLLECTOR-----------------
 1)MARK PHASE
 2)SWEEP PHASE
@@ -233,6 +276,9 @@ void sweep_phase(){
 
         //Move to the next block in our linked list
         curr = curr->next;
+
+
+        coalesce(); //After the GC sweeps any unreachable blocks, we will coalesce the heap so it can be perfectly optimized for the next allocation
     }
 }
 
@@ -252,7 +298,7 @@ void ggfree(void* ptr){
     1)to free a block that was already freed or 
     2) a block that was never allocated*/
     if(blk->magic != MAGIC){
-        //So we'll safely ignore this user request
+        //We'll safely ignore this user request
         return;
     }
 
@@ -260,11 +306,6 @@ void ggfree(void* ptr){
     blk->free = 1;
     blk->is_reachable = 0;
 
-}
+    coalesce(); //To heal the heap after freeing the block
 
-
-
-int main(){
-
-    
 }
