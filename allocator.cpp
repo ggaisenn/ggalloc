@@ -197,11 +197,9 @@ void coalesce(){
                 continue;
             }
         }
+            //If no merge happened, move to the next block
+            curr = curr->next;
     }
-
-    //If no merge happened, move to the next block
-    curr = curr->next;
-
 }
 
 /*-----------------GARBAGE-COLLECTOR-----------------
