@@ -23,7 +23,7 @@ eg: ALIGN([1,16]) = 16, ALIGN([17,32]) = 32 ..ALIGN([241,256]) = 256 and so on*/
 
 #define SIZEOFMETA sizeof(struct meta) //used to manage the metadata of each block
 #define MAGIC 0xDEADBEEF 
-/*if a user accidentally writes past their allocated memory(leading to a n overflow), this field will be overridden first, 
+/*if a user accidentally writes past their allocated memory(leading to an overflow), this field will be overridden first, 
 providing us with a heap corruption alert,thereby enabling us to handle the error which would have otherwise gone unnoticed, 
 leading to a crash in the program*/
 
@@ -75,3 +75,24 @@ we would typecast the pointer to struct meta* which will be used by the allocato
 
 // To get payload => look forward
 // To get metadata => look backward
+
+
+//To make the allocator library usable in C and C++
+
+#pragma once
+
+#ifdef __cpp //Allows us to use the header in both C and C++ projects.
+//Prevents the C++ compiler from mangling (ie. altering) the function names
+
+
+extern "C"{
+  #endif
+
+     void* ggalloc(size_t size);
+     void ggfree(void* ptr);
+  #ifdef __cpp
+}
+
+
+#endif
+
