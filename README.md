@@ -105,18 +105,19 @@ g++ -std=c++17 -o allocator ggalloc/allocator.cpp
 
 ## Current Status
 
-| Step | Feature                    | Status |
-| ---- | -------------------------- | ------ |
-| 1    | Block metadata struct      | ✅ Done |
-| 2    | Alignment macros           | ✅ Done |
-| 3    | First-Fit search algorithm | ✅ Done |
-| 4    | OS memory request (`sbrk`) | ✅ Done |
-| 5    | Block splitting            | ✅ Done |
-| 6    | Core allocator (`ggalloc`) | ✅ Done |
-| 7    | GC Mark Phase              | ✅ Done |
-| 8    | GC Sweep Phase             | ✅ Done |
-| 9    | Manual free (`ggfree`)     | ✅ Done |
-| 10   | Coalescing (defrag)        | ✅ Done |
+| Step | Feature                    |Status|
+| ---- | -------------------------- |------|
+| 1    | Block metadata struct      | Done |
+| 2    | Alignment macros           | Done |
+| 3    | First-Fit search algorithm | Done |
+| 4    | OS memory request (`sbrk`) | Done |
+| 5    | Block splitting            | Done |
+| 6    | Core allocator (`ggalloc`) | Done |
+| 7    | GC Mark Phase              | Done |
+| 8    | GC Sweep Phase             | Done |
+| 9    | Manual free (`ggfree`)     | Done |
+| 10   | Coalescing (defrag)        | Done |
+| 10   | Public Interface           | Done |
 
 #### GC - Garbage Collector
 
