@@ -117,7 +117,6 @@ g++ -std=c++17 -o allocator ggalloc/allocator.cpp
 | 8    | GC Sweep Phase             | Done |
 | 9    | Manual free (`ggfree`)     | Done |
 | 10   | Coalescing (defrag)        | Done |
-| 10   | Public Interface           | Done |
 
 #### GC - Garbage Collector
 
