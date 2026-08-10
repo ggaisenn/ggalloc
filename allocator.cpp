@@ -96,6 +96,7 @@ void block_split(struct meta* block, size_t size){
 
     //Adjusting the original block to fit the block size requested by the user
     block->size = size;
+    block->free = 0; //The block is in use
     block->next = new_b; //Point to our new block
 
 }
