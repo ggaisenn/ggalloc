@@ -278,8 +278,9 @@ void sweep_phase(){
         curr = curr->next;
 
 
-        coalesce(); //After the GC sweeps any unreachable blocks, we will coalesce the heap so it can be perfectly optimized for the next allocation
     }
+
+    coalesce(); //After the GC sweeps any unreachable blocks, we will coalesce the heap so it can be perfectly optimized for the next allocation
 }
 
 
