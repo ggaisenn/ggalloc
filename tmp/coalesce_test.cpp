@@ -11,7 +11,7 @@ int main() {
     for (struct meta* m = (struct meta*)global; m; m = m->next) {
         cout << "Block " << n++ << ": size=" << m->size << ", free=" << m->free;
     }
-    cout << endl;;
+    cout << endl;
 
     void* d = ggalloc(64);
     cout << "alloc after coalesce: " << (d ? "OK" : "FAILED") << endl;
