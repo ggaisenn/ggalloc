@@ -1,3 +1,4 @@
+#pragma once
 #include <cstddef>
 
 //Defining the structure of our metadata 
@@ -78,8 +79,6 @@ we would typecast the pointer to struct meta* which will be used by the allocato
 
 //To make the allocator library usable in C and C++
 
-
-#pragma once
 
 #ifdef __cplusplus //Allows us to use the header in both C and C++ projects.
 //Prevents the C++ compiler from mangling (ie. altering) the function names
