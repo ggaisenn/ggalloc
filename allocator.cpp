@@ -186,7 +186,7 @@ void coalesce(){
             if(curr_end == next_start){
 
                 //The new block will abosrobs the next block's payload size and metadata header
-                curr->size = SIZEOFMETA + curr->next->size;
+                curr->size = curr->size + SIZEOFMETA + curr->next->size;
 
                 //Update the linked list to the next of the absorbed block
                 curr->next = curr->next->next;
