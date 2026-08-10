@@ -67,6 +67,7 @@ struct meta* space_request(struct meta* ptr, size_t size){
     //We'll initialize our header for this new block
     block->size = size;  
     block->free = 0;         //Block in use
+    block->is_reachable = 0; //The Block is reachable by default, but we'll mark it as garbage until the next GC cycle
     block->magic = MAGIC;    //Set our corruption alert
     block->next = nullptr;  //The new end of the list
 
@@ -89,6 +90,7 @@ void block_split(struct meta* block, size_t size){
     //Initialize the remainder space as a new block in our free list
     new_b->size = block->size - size - SIZEOFMETA; 
     new_b->free = 1; // The remainder block is free
+    new_b->is_reachable = 0; //The Block is reachable by default, but we'll mark it as garbage until the next GC cycle
     new_b->magic = MAGIC; 
     new_b->next = block->next; //The new block will point to the block pointed by the previous one
 
