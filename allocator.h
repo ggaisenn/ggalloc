@@ -1,6 +1,5 @@
 #include <cstddef>
 
-
 //Defining the structure of our metadata 
 struct meta{
     size_t size; //to check size of memory block requested by the user, and to handle it among various OS versions(ie. bits)
@@ -79,9 +78,10 @@ we would typecast the pointer to struct meta* which will be used by the allocato
 
 //To make the allocator library usable in C and C++
 
+
 #pragma once
 
-#ifdef __cpp //Allows us to use the header in both C and C++ projects.
+#ifdef __cplusplus //Allows us to use the header in both C and C++ projects.
 //Prevents the C++ compiler from mangling (ie. altering) the function names
 
 
@@ -90,7 +90,7 @@ extern "C"{
 
      void* ggalloc(size_t size);
      void ggfree(void* ptr);
-  #ifdef __cpp
+  #ifdef __cplusplus
 }
 
 
