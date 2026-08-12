@@ -39,6 +39,11 @@ struct meta* free_block(struct meta** ptr, size_t size){
  We will use the sbrk() system call (belongs to the POSIX standard) for this purpose.
 This function is used to move the program break(ie the boundary of the heap) upwards, thus providing us with new encompassed space */
 
+// sbrk is deprecated on macOS;
+// suppressing the deprecation nag so -Werror stays green for the intended design.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 struct meta* space_request(struct meta* ptr, size_t size){
 
     /*The OS doesn't care about our metadata, 
@@ -74,6 +79,7 @@ struct meta* space_request(struct meta* ptr, size_t size){
     return block;
 
 }
+#pragma clang diagnostic pop
 
 /* Suppose if a user had previously allocated a massive block of memory and then freed it. Later on they want to use a block of memory that is smaller than the one they freed.
 Our First-Fit search algorithm will hand over the previous block without checking the size of the new block requested by the user, leading to a wastage of heap space. 
@@ -153,6 +159,8 @@ void* ggalloc(size_t size){
 }
 
 //To verify if a random memory is inside our heap
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 bool valid_heap(void* ptr){
 
     if(!global || !ptr) return false;
@@ -163,6 +171,7 @@ bool valid_heap(void* ptr){
     //The pointer must fall between the heap start and the end of the heap
     return (ptr>=global && ptr < heap_top);
 }
+#pragma clang diagnostic pop
 
 /*Eg: If a user allocates three 32-byte blocks of memory and then frees all three, 
 we technically would have had 96 bytes of free memory (plus header space). 
