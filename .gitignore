@@ -153,3 +153,9 @@ build/
 
 # Stale manually-built binaries (replaced by build/)
 /allocator
+
+tmp/
+
+tests.cpp
+
+main_demo.cpp
