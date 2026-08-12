@@ -5,7 +5,7 @@
 struct meta{
     size_t size; //to check size of memory block requested by the user, and to handle it among various OS versions(ie. bits)
     int free;  //1=free, 0=used
-    int magic; //to check corruption/Integrity of block
+    unsigned int magic; //to check corruption/Integrity of block
     int is_reachable; // 1=Reachable, 0=Garbage
     struct meta* next; //next block
 };
@@ -22,7 +22,7 @@ eg: ALIGN([1,16]) = 16, ALIGN([17,32]) = 32 ..ALIGN([241,256]) = 256 and so on*/
 
 
 #define SIZEOFMETA sizeof(struct meta) //used to manage the metadata of each block
-#define MAGIC 0xDEADBEEF 
+#define MAGIC 0xDEADBEEFu 
 /*if a user accidentally writes past their allocated memory(leading to an overflow), this field will be overridden first, 
 providing us with a heap corruption alert,thereby enabling us to handle the error which would have otherwise gone unnoticed, 
 leading to a crash in the program*/
