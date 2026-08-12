@@ -12,3 +12,8 @@ set(COMMON_FLAGS -Wall -Wextra -Werror)
 
 add_executable(ggalloc-demo allocator.cpp main_demo.cpp)
 target_compile_options(ggalloc-demo PRIVATE ${COMMON_FLAGS})
+
+enable_testing()
+add_executable(ggalloc-tests allocator.cpp tests.cpp)
+target_compile_options(ggalloc-tests PRIVATE ${COMMON_FLAGS})
+add_test(NAME ggalloc-tests COMMAND ggalloc-tests)
