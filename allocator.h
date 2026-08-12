@@ -89,6 +89,7 @@ extern "C"{
 
      void* ggalloc(size_t size);
      void ggfree(void* ptr);
+     bool valid_heap(void* ptr); //bounds check: ptr inside [global, sbrk(0))
   #ifdef __cplusplus
 }
 
