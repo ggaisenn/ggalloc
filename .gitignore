@@ -141,3 +141,15 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# CMake build output
+build/
+
+# macOS
+.DS_Store
+
+# Compiled objects
+*.o
+
+# Stale manually-built binaries (replaced by build/)
+/allocator
