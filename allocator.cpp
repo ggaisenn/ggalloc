@@ -2,6 +2,8 @@
 #include <iostream>
 #include <unistd.h> //POSIX header
 #include <cassert>
+#include <pthread.h> 
+#include <cstdlib>   
 using namespace std;
 
 //The absolute start of our heap
@@ -293,6 +295,33 @@ void sweep_phase(){
     coalesce(); //After the GC sweeps any unreachable blocks, we will coalesce the heap so it can be perfectly optimized for the next allocation
 }
 
+/*-----------------GC-ORCHESTRATOR-----------------
+mark_phase() and sweep_phase() exist, but nothing ever CALLED them.
+gggc() captures the root set (the stack), then runs mark -> sweep in the correct order. */
+void gggc(){
+
+    /* Root-set capture — the address-of-local trick:
+    A local variable lives on the current stack frame. Taking its address
+    gives a snapshot of today's stack pointer. The stack grows DOWNWARD,
+    so everything at or above this address is live (callers, main, ...);
+    everything below is dead stack space we skip (skipping it = fewer
+    stale-pointer false positives). */
+    void* local = nullptr;
+    void** stack_low = (void**)&local;
+
+    /* Root-set capture — the top of the stack region.
+    pthread hands us the highest address our thread's stack may use. */
+    pthread_t me = pthread_self();
+    void** stack_high = (void**)pthread_get_stackaddr_np(me);
+
+    /* 1) MARK: scan [stack_low, stack_high) word by word; every word that
+    looks like an in-heap address marks its block reachable. */
+    mark_phase(stack_low, stack_high);
+
+    /* 2) SWEEP: reclaim used blocks that were NOT marked. No coalesce()
+    call needed here — sweep_phase() already runs it at the end. */
+    sweep_phase();
+}
 
 //We'll also make a free function to allow the user to manually release memory when they are done with it. 
 // Step backward -> locate the hidden header -> mark the block as free
@@ -320,3 +349,5 @@ void ggfree(void* ptr){
     coalesce(); //To heal the heap after freeing the block
 
 }
+
+
