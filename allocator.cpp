@@ -328,18 +328,36 @@ void gggc(){
 
 void ggfree(void* ptr){
 
-    //if user passes a null pointer, the standard behaviour is to safely do nothing
+    //C standard: freeing NULL is a safe no-op
     if(!ptr) return;
 
-    //Use macro to step backwards in memory and locate the hidden header
+    /*Step 0 — BOUNDS CHECK, before touching ANY memory. A foreign pointer
+    (stack/local/another allocator) must never be dereferenced as a block
+    header: that's a segfault or silent corruption of someone else's
+    object. valid_heap() proves ptr is inside [global, sbrk(0)).*/
+    if(!valid_heap(ptr)){
+        cerr << "ggfree: invalid pointer " << ptr << " (not in heap). aborting\n";
+        abort();
+    }
+
+    //Step backward -> locate the hidden header (safe: ptr is in-heap now)
     struct meta* blk = META(ptr);
 
-    /*If the magic number is missing, it means that the user is trying 
-    1)to free a block that was already freed or 
-    2) a block that was never allocated*/
+    /*Step 1 — MAGIC CHECK: the header must be intact. A missing magic
+    means corruption (user wrote past their payload) or a mid-payload
+    pointer being passed off as a block start.*/
     if(blk->magic != MAGIC){
-        //We'll safely ignore this user request
-        return;
+        cerr << "ggfree: corrupted or unknown block at " << ptr << ". aborting\n";
+        abort();
+    }
+
+    /*Step 2 — DOUBLE-FREE CHECK: only USED blocks may be freed. A free
+    block here means the caller freed it twice (this also catches blocks
+    coalesce() already merged into a neighbor — the swallowed header
+    still reads free==1).*/
+    if(blk->free == 1){
+        cerr << "ggfree: double free of " << ptr << ". aborting\n";
+        abort();
     }
 
     //Mark the block as free and not reachable so that it can be reclaimed in the next GC cycle
